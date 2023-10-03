@@ -1,3 +1,5 @@
+On line 27 ListingItem.jsx .toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') adds a comma to the price at the thousand mark.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
