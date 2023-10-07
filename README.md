@@ -1,5 +1,7 @@
 On line 27 ListingItem.jsx .toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') adds a comma to the price at the thousand mark.
 
+The double ?? ie. boolean ?? e.target.value From MDN: The nullish coalescing (??) operator is a logical operator that returns its right-hand side operand when its left-hand side operand is null or undefined, and otherwise returns its left-hand side operand.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
