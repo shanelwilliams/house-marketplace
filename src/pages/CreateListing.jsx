@@ -176,19 +176,79 @@ function CreateListing() {
 							value={true}
 							onClick={onMutate}
 						>
-                            Yes
-                        </button>
+							Yes
+						</button>
 						<button
-							className={!furnished && furnished !== null ? 'formButtonActive' : 'formButton'}
+							className={
+								!furnished && furnished !== null
+									? 'formButtonActive'
+									: 'formButton'
+							}
 							type='button'
 							id='furnished'
 							value={false}
 							onClick={onMutate}
 						>
-                            No
-                        </button>
+							No
+						</button>
 					</div>
 
+					<label className='formLabel'>Address</label>
+					<textarea
+						className='formInputAddress'
+						type='text'
+						id='address'
+						value={address}
+						onChange={onMutate}
+						required
+					/>
+
+					{!geolocationEnabled && (
+						<div className='formLatLng flex'>
+							<div>
+								<label className='formLabel'>Latitude</label>
+								<input className='formInputSmall'
+                                type='number'
+                                id='latitude'
+                                value={latitude}
+                                onChange={onMutate}
+                                required
+                                />
+							</div>
+							<div>
+								<label className='formLabel'>Longitude</label>
+								<input className='formInputSmall'
+                                type='number'
+                                id='longitude'
+                                value={longitude}
+                                onChange={onMutate}
+                                required
+                                />
+							</div>
+						</div>
+					)}
+
+                    <label className='formLabel'>Offer</label>
+                    <div className="formButtons">
+                        <button 
+                        className={offer ? 'formButtonActive' : 'formButton'}
+                        type='button'
+                        id='offer'
+                        value={true}
+                        onClick={onMutate}
+                        >
+                            Yes
+                        </button>
+                        <button
+                        className={!offer && offer !== null ? 'formButtonActive' : 'formButton'}
+                        type='button'
+                        id='offer'
+                        value={false}
+                        onClick={onMutate}
+                        >
+                            No
+                        </button>
+                    </div>
 				</form>
 			</main>
 		</div>
