@@ -1,8 +1,16 @@
 import React, { useRef } from 'react'
 import { useState, useEffect } from 'react'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import {
+	getStorage,
+	ref,
+	uploadBytesResumable,
+	getDownloadURL,
+} from 'firebase/storage'
+import { db } from '../firebase.config'
 import { useNavigate } from 'react-router-dom'
-import {toast} from 'react-toastify'
+import { toast } from 'react-toastify'
+import { v4 as uuidv4 } from 'uuid'
 import Spinner from '../components/Spinner'
 
 function CreateListing() {
@@ -65,14 +73,14 @@ function CreateListing() {
 		e.preventDefault()
 
 		setLoading(true)
-        
-		if(discountedPrice >= regularPrice) {
+
+		if (discountedPrice >= regularPrice) {
 			setLoading(false)
 			toast.error('Discounted price needs to be less than regular price')
 			return
 		}
 
-		if(images.length > 6) {
+		if (images.length > 6) {
 			setLoading(false)
 			toast.error('Max 6 images')
 			return
@@ -81,17 +89,22 @@ function CreateListing() {
 		let geolocation = {}
 		let location
 
-		if(geolocationEnabled) {
-			const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`)
+		if (geolocationEnabled) {
+			const response = await fetch(
+				`https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`
+			)
 
 			const data = await response.json()
 
 			geolocation.lat = data.results[0]?.geometry.location.lat ?? 0
 			geolocation.lng = data.results[0]?.geometry.location.lng ?? 0
 
-			location = data.status === 'ZERO_RESULTS' ? undefined : data.results[0]?.formatted_address
+			location =
+				data.status === 'ZERO_RESULTS'
+					? undefined
+					: data.results[0]?.formatted_address
 
-			if(location === undefined || location.includes('undefined')) {
+			if (location === undefined || location.includes('undefined')) {
 				setLoading(false)
 				toast.error('Please enter a correct address')
 				return
@@ -100,38 +113,84 @@ function CreateListing() {
 			geolocation.lat = latitude
 			geolocation.lng = longitude
 			location = address
-			
 		}
+
+		// store image in firebase
+		const storeImage = async (image) => {
+			return new Promise((resolve, reject) => {
+				const storage = getStorage()
+				const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`
+
+				const storageRef = ref(storage, 'images/' + fileName)
+
+				const uploadTask = uploadBytesResumable(storageRef, image)
+
+				uploadTask.on(
+					'state_changed',
+					(snapshot) => {
+						const progress =
+							(snapshot.bytesTransferred / snapshot.totalBytes) * 100
+						console.log('Upload is ' + progress + '% done')
+						// switch (snapshot.state) {
+						// 	case 'paused':
+						// 		console.log('Upload is paused')
+						// 		break
+						// 	case 'running':
+						// 		console.log('Upload is running')
+						// 		break
+						// }
+					},
+					(error) => {
+						reject(error)
+					},
+					() => {
+						getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+							resolve(downloadURL)
+						})
+					}
+				)
+			})
+		}
+
+		const imgURLs = await Promise.all(
+			[...images].map((image) => storeImage(image))
+		).catch(() => {
+			setLoading(false)
+			toast.error('Images not uploaded')
+			return
+		})
+
+		console.log(imgURLs)
 
 		setLoading(false)
 	}
 
 	const onMutate = (e) => {
-        let boolean = null
+		let boolean = null
 
-        if(e.target.value === 'true') {
-            boolean = true
-        }
-        if(e.target.value === 'false') {
-            boolean = false
-        }
+		if (e.target.value === 'true') {
+			boolean = true
+		}
+		if (e.target.value === 'false') {
+			boolean = false
+		}
 
-        // Files
-        if(e.target.files) {
-            setFormData((prevState) => ({
-                ...prevState,
-                images: e.target.files
-            }))
-        }
+		// Files
+		if (e.target.files) {
+			setFormData((prevState) => ({
+				...prevState,
+				images: e.target.files,
+			}))
+		}
 
-        // Text/Booleans/Numbers
-        if(!e.target.files) {
-            setFormData((prevState) => ({
-                ...prevState,
-                [e.target.id]: boolean ?? e.target.value
-            }))
-        }
-    }
+		// Text/Booleans/Numbers
+		if (!e.target.files) {
+			setFormData((prevState) => ({
+				...prevState,
+				[e.target.id]: boolean ?? e.target.value,
+			}))
+		}
+	}
 
 	if (loading) {
 		return <Spinner />
@@ -366,7 +425,9 @@ function CreateListing() {
 						multiple
 						required
 					/>
-                    <button type='submit' className="primaryButton createListingButton">Create Listing</button>
+					<button type='submit' className='primaryButton createListingButton'>
+						Create Listing
+					</button>
 				</form>
 			</main>
 		</div>
